@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/magic",
+      "destination": "/pdf/Vercel_doreamon.pdf"
+    }
+  ]
+}
