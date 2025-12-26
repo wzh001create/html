@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyML：边缘智能的微观世界 (Tiny Machine Learning Report)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts (Noto Sans SC) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* Slate 50 */
+            color: #1e293b; /* Slate 800 */
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar for sleek look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .active-tab {
+            background-color: #0f766e; /* Teal 700 */
+            color: white;
+            border-color: #0f766e;
+        }
+    </style>
+
+    <!-- 
+    Placeholder Comments 
+    -->
+    <!-- Chosen Palette: Eco-Intelligence (Slate Background, White Cards, Teal Primary, Amber Accent). Reflects efficiency (Green/Teal) and hardware (Slate). -->
+    
+    <!-- Application Structure Plan: 
+         1. Hero Section: Definition and Hook.
+         2. Problem/Solution (Interactive): The "Why" - Bandwidth/Latency/Power comparison toggle.
+         3. Technology Pipeline: Visualizing Model Compression (Quantization).
+         4. Application Explorer (The Core): A grid of industries (Audio, Vision, Motion, Future). Clicking updates a detail pane with specific use cases and sensor charts.
+         5. Market & Future Trends: Data visualization of growth and radar chart of future capabilities.
+         Rationale: Logic flows from "What/Why" -> "How" -> "Where" -> "When". This helps the user build a mental model of the technology before seeing its applications.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Comparison Chart (Bar): To contrast Cloud AI vs TinyML on Latency and Power. Goal: Inform/Compare.
+         2. Compression Viz (Doughnut): Comparing model size Float32 vs Int8. Goal: Inform.
+         3. Application Details (Dynamic Text + Radar): To show the suitability of TinyML for different sectors. Goal: Organize.
+         4. Market Growth (Line): Showing device projection. Goal: Inform.
+         Confirming NO SVG, NO Mermaid. All Charts via Chart.js.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-teal-700">TinyML</span>
+                    <span class="ml-2 text-sm text-slate-500 font-medium hidden sm:block">研究报告 & 应用场景调研</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="scrollToSection('why')" class="text-sm font-medium text-slate-600 hover:text-teal-600">核心优势</button>
+                    <button onclick="scrollToSection('tech')" class="text-sm font-medium text-slate-600 hover:text-teal-600">技术原理</button>
+                    <button onclick="scrollToSection('apps')" class="text-sm font-medium text-slate-600 hover:text-teal-600">应用场景</button>
+                    <button onclick="scrollToSection('future')" class="text-sm font-medium text-slate-600 hover:text-teal-600">未来趋势</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-slate-900 text-white pt-20 pb-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
+                微型机器学习 <span class="text-teal-400">(TinyML)</span>
+            </h1>
+            <p class="text-xl text-slate-300 max-w-3xl mx-auto mb-10">
+                将人工智能赋予数十亿个低功耗微控制器 (MCU)。<br>
+                在只有 KB 级内存的设备上实现 <span class="text-white font-semibold">始终在线 (Always-on)</span> 的智能分析。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
+                <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                    <div class="text-teal-400 text-2xl font-bold mb-2">mW 级</div>
+                    <div class="text-sm text-slate-400">超低功耗，电池供电可运行数年。</div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                    <div class="text-teal-400 text-2xl font-bold mb-2">&lt; 256 KB</div>
+                    <div class="text-sm text-slate-400">极小的内存占用，无需昂贵的硬件。</div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                    <div class="text-teal-400 text-2xl font-bold mb-2">0 延迟</div>
+                    <div class="text-sm text-slate-400">本地推理，无需上传云端，隐私绝对安全。</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10 pb-20 space-y-20">
+
+        <!-- Section 1: Why TinyML? (Comparison) -->
+        <section id="why" class="bg-white rounded-xl shadow-xl p-8">
+            <div class="mb-8 border-b border-slate-100 pb-4">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">1. 核心优势：为什么我们需要边缘智能？</h2>
+                <p class="text-slate-600">传统的云端 AI 需要将数据传输到服务器，存在延迟、隐私泄露和高能耗问题。TinyML 在数据源头（边缘）直接处理数据。</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                <div class="lg:col-span-1 space-y-4">
+                    <p class="text-sm font-bold text-slate-500 uppercase tracking-wide">交互演示</p>
+                    <h3 class="text-lg font-semibold text-slate-800">对比维度选择</h3>
+                    <p class="text-sm text-slate-600 mb-4">点击下方按钮，对比 TinyML 与 传统云端 AI 在不同维度上的表现。</p>
+                    
+                    <div class="flex flex-col space-y-2">
+                        <button id="btn-latency" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 hover:bg-slate-50 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors active-tab" onclick="updateComparison('latency', this)">
+                            <div class="font-bold">⏱️ 延迟 (Latency)</div>
+                            <div class="text-xs opacity-80">毫秒 vs 秒级</div>
+                        </button>
+                        <button id="btn-power" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 hover:bg-slate-50 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors" onclick="updateComparison('power', this)">
+                            <div class="font-bold">🔋 功耗 (Power)</div>
+                            <div class="text-xs opacity-80">毫瓦 vs 瓦特</div>
+                        </button>
+                        <button id="btn-bandwidth" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 hover:bg-slate-50 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors" onclick="updateComparison('bandwidth', this)">
+                            <div class="font-bold">📡 带宽 (Bandwidth)</div>
+                            <div class="text-xs opacity-80">字节 vs 兆字节</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-slate-50 rounded-lg p-6">
+                    <div id="comparison-description" class="mb-4 text-center text-slate-700 font-medium h-12 flex items-center justify-center">
+                        <!-- Dynamic text content -->
+                        本地推理消除了网络传输时间，实现实时响应。
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Technology (Quantization) -->
+        <section id="tech" class="bg-white rounded-xl shadow-lg p-8">
+            <div class="mb-8 border-b border-slate-100 pb-4">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">2. 技术原理：如何将大象装进冰箱？</h2>
+                <p class="text-slate-600">TinyML 的核心在于**模型压缩 (Model Compression)**。通过量化 (Quantization)、剪枝 (Pruning) 和知识蒸馏，将巨大的神经网络转化为能在微控制器上运行的精简代码。</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div>
+                    <h3 class="text-lg font-bold text-teal-700 mb-4">关键技术栈</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-teal-100 text-teal-600 rounded-full font-bold">1</span>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-slate-800">模型量化 (Quantization)</h4>
+                                <p class="text-sm text-slate-600 mt-1">将 32位浮点数 (Float32) 转换为 8位整数 (Int8)。精度略微下降，但内存占用减少 75%，计算速度提升。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-indigo-100 text-indigo-600 rounded-full font-bold">2</span>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-slate-800">TensorFlow Lite for Microcontrollers</h4>
+                                <p class="text-sm text-slate-600 mt-1">专为嵌入式设备设计的解释器，核心库仅需 16KB。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-amber-100 text-amber-600 rounded-full font-bold">3</span>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-slate-800">硬件加速 (NPU/DSP)</h4>
+                                <p class="text-sm text-slate-600 mt-1">ARM Cortex-M55, Ethos-U55 等专用架构，显著提升矩阵运算效率。</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <h4 class="text-center font-bold text-slate-700 mb-4">模型大小对比示意 (MobileNet V1)</h4>
+                    <div class="chart-container">
+                        <canvas id="quantizationChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-500 mt-2">* 数据仅为示意，实际压缩率视模型结构而定。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Applications (Interactive Explorer) -->
+        <section id="apps" class="space-y-6">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">3. 具体应用场景调研</h2>
+                    <p class="text-slate-600">TinyML 正通过“音频”、“视觉”和“运动/传感器”三大模态渗透各行各业。点击下方卡片查看详情。</p>
+                </div>
+
+                <!-- Domain Selector -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <button onclick="selectDomain('consumer')" class="domain-btn p-4 rounded-xl border border-slate-200 bg-white hover:border-teal-400 hover:shadow-md transition-all text-center group active-domain ring-2 ring-teal-500" data-domain="consumer">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🏠</div>
+                        <div class="font-bold text-slate-700">消费电子 & 智能家居</div>
+                    </button>
+                    <button onclick="selectDomain('industrial')" class="domain-btn p-4 rounded-xl border border-slate-200 bg-white hover:border-teal-400 hover:shadow-md transition-all text-center group" data-domain="industrial">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🏭</div>
+                        <div class="font-bold text-slate-700">工业 4.0</div>
+                    </button>
+                    <button onclick="selectDomain('health')" class="domain-btn p-4 rounded-xl border border-slate-200 bg-white hover:border-teal-400 hover:shadow-md transition-all text-center group" data-domain="health">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">❤️</div>
+                        <div class="font-bold text-slate-700">健康 & 可穿戴</div>
+                    </button>
+                    <button onclick="selectDomain('nature')" class="domain-btn p-4 rounded-xl border border-slate-200 bg-white hover:border-teal-400 hover:shadow-md transition-all text-center group" data-domain="nature">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🌿</div>
+                        <div class="font-bold text-slate-700">农业 & 环境</div>
+                    </button>
+                </div>
+
+                <!-- Detail View Area -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 bg-slate-50 rounded-xl p-6 border border-slate-200">
+                    <!-- Left: Text Content -->
+                    <div class="lg:col-span-2">
+                        <h3 id="domain-title" class="text-xl font-bold text-teal-700 mb-4">消费电子 & 智能家居</h3>
+                        <p id="domain-desc" class="text-slate-600 mb-6 leading-relaxed">
+                            这是 TinyML 目前最成熟的市场。主要利用音频关键字识别（KWS）和低分辨率视觉传感器，实现设备的自然交互和情境感知。
+                        </p>
+                        
+                        <h4 class="font-bold text-slate-800 mb-3 border-l-4 border-amber-400 pl-3">典型用例 (Use Cases)</h4>
+                        <div id="use-cases-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Populated by JS -->
+                            <div class="bg-white p-3 rounded shadow-sm border border-slate-100">
+                                <span class="font-bold text-slate-700 block">语音唤醒 (KWS)</span>
+                                <span class="text-sm text-slate-500">"Hey Siri", "小爱同学"。功耗 <1mW。</span>
+                            </div>
+                            <div class="bg-white p-3 rounded shadow-sm border border-slate-100">
+                                <span class="font-bold text-slate-700 block">存在检测</span>
+                                <span class="text-sm text-slate-500">电视/空调检测是否有人在场，自动开关。</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Sensor Distribution Chart -->
+                    <div class="lg:col-span-1 bg-white p-4 rounded-xl shadow-inner flex flex-col items-center justify-center">
+                        <h4 class="text-sm font-bold text-slate-500 mb-2 uppercase text-center">核心传感器类型</h4>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="sensorPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Future & Market -->
+        <section id="future" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Market Growth -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="border-b border-slate-100 pb-4 mb-4">
+                    <h2 class="text-xl font-bold text-slate-800">4. 市场爆发增长</h2>
+                    <p class="text-sm text-slate-500">TinyML 设备出货量预测 (单位: 十亿台)</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="marketChart"></canvas>
+                </div>
+                <p class="text-xs text-slate-400 mt-4 text-center">数据来源: ABI Research 综合估算</p>
+            </div>
+
+            <!-- Future Scenarios List -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="border-b border-slate-100 pb-4 mb-4">
+                    <h2 class="text-xl font-bold text-slate-800">5. 未来应用展望</h2>
+                    <p class="text-sm text-slate-500">从感知到认知的进化</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0 mt-1">
+                            <span class="block w-3 h-3 bg-teal-500 rounded-full"></span>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold text-slate-800">设备端训练 (On-Device Training)</h4>
+                            <p class="text-sm text-slate-600">目前 TinyML 主要是推理 (Inference)。未来设备将能进行微调 (Fine-tuning)，适应用户个性化习惯，例如学习特定的背景噪音或用户步态。</p>
+                        </div>
+                    </div>
+                    <div class="flex">
+                        <div class="flex-shrink-0 mt-1">
+                            <span class="block w-3 h-3 bg-indigo-500 rounded-full"></span>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold text-slate-800">无电池传感器 (Battery-free AI)</h4>
+                            <p class="text-sm text-slate-600">结合能量收集技术 (射频/光能/振动)，TinyML 算法的极低功耗将使“永久在线”的传感器成为可能，彻底改变基础设施监测。</p>
+                        </div>
+                    </div>
+                    <div class="flex">
+                        <div class="flex-shrink-0 mt-1">
+                            <span class="block w-3 h-3 bg-amber-500 rounded-full"></span>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold text-slate-800">多模态融合</h4>
+                            <p class="text-sm text-slate-600">同时处理音频 + 视觉 + 振动数据，提高判断准确率。例如：不仅“看到”机器在震动，还能“听到”异响。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="mb-4">TinyML Interactive Research Report</p>
+            <p class="text-sm">Generated for Educational Purposes. No external images or SVG files used.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. Comparison Chart Logic (Interactive) ---
+        const ctxComparison = document.getElementById('comparisonChart').getContext('2d');
+        
+        // Data for different metrics (Cloud vs TinyML)
+        const comparisonData = {
+            latency: {
+                label: '处理延迟 (Latency - ms)',
+                cloud: 2000,
+                tiny: 50,
+                desc: '本地推理消除了网络传输时间，实现实时响应。Cloud: ~2s, TinyML: <50ms。'
+            },
+            power: {
+                label: '平均功耗 (Power - mW)',
+                cloud: 1500, // WiFi TX power roughly
+                tiny: 20,    // MCU Inference
+                desc: '无线传输数据是电池杀手。本地处理可将功耗降低 99%。Cloud (WiFi): ~1.5W, TinyML: ~20mW。'
+            },
+            bandwidth: {
+                label: '数据传输量 (Bandwidth - Bytes)',
+                cloud: 200000, // Sending image
+                tiny: 1,       // Sending result (0 or 1)
+                desc: '仅传输结果而非原始数据，极大节省带宽。Cloud: 200KB (Image), TinyML: 1 Byte (Yes/No)。'
+            }
+        };
+
+        let comparisonChart = new Chart(ctxComparison, {
+            type: 'bar',
+            data: {
+                labels: ['传统云端 AI (Cloud)', 'TinyML (Edge)'],
+                datasets: [{
+                    label: '处理延迟 (Latency - ms)',
+                    data: [2000, 50],
+                    backgroundColor: ['#94a3b8', '#0d9488'], // Slate 400, Teal 600
+                    borderRadius: 8,
+                    barThickness: 50
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#e2e8f0' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        function updateComparison(metric, btn) {
+            // Update UI buttons
+            document.querySelectorAll('#why button').forEach(b => {
+                b.classList.remove('active-tab', 'ring-2', 'ring-teal-500', 'border-teal-500');
+                b.classList.add('border-slate-200');
+            });
+            btn.classList.add('active-tab', 'ring-2', 'ring-teal-500');
+            btn.classList.remove('border-slate-200');
+
+            // Update Chart
+            const data = comparisonData[metric];
+            comparisonChart.data.datasets[0].label = data.label;
+            comparisonChart.data.datasets[0].data = [data.cloud, data.tiny];
+            comparisonChart.update();
+
+            // Update Text
+            document.getElementById('comparison-description').innerText = data.desc;
+        }
+
+        // --- 2. Quantization Chart (Doughnut) ---
+        const ctxQuant = document.getElementById('quantizationChart').getContext('2d');
+        new Chart(ctxQuant, {
+            type: 'doughnut',
+            data: {
+                labels: ['模型权重 (Weights)', '其他元数据', '节省空间'],
+                datasets: [{
+                    data: [25, 5, 70],
+                    backgroundColor: ['#0f766e', '#cbd5e1', '#f1f5f9'], // Teal, Slate, Light Slate
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '量化后模型体积减少 ~75%',
+                        position: 'bottom',
+                        font: { size: 14 }
+                    },
+                    legend: { position: 'right' }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // --- 3. Application Domain Explorer Logic ---
+        const domains = {
+            consumer: {
+                title: '消费电子 & 智能家居',
+                desc: 'TinyML 在智能音箱、门铃和家电中最为常见。通过本地处理，无需等待云端响应即可实现控制，同时保护家庭隐私。',
+                cases: [
+                    { t: '语音关键词唤醒 (KWS)', d: '识别 "Alexa" 或自定义命令，功耗 <1mW。' },
+                    { t: '视觉存在检测', d: '笔记本电脑检测用户离开即锁屏，保护隐私并省电。' },
+                    { t: '手势控制', d: '通过雷达或 IMU 识别挥手动作，控制耳机或灯光。' },
+                    { t: '智能摄像机', d: '本地识别人形或包裹，仅在相关事件发生时录像。' }
+                ],
+                sensors: [60, 30, 10] // Audio, Vision, IMU
+            },
+            industrial: {
+                title: '工业 4.0 (Predictive Maintenance)',
+                desc: '预测性维护是工业领域的杀手级应用。TinyML 设备贴附在电机上，分析振动模式，在故障发生前数周发出预警。',
+                cases: [
+                    { t: '异常检测 (Anomaly)', d: '学习机器正常运行的振动/声音模式，识别异常偏离。' },
+                    { t: '表计读数', d: '老式仪表通过加装 TinyML 摄像头实现自动数字化读数。' },
+                    { t: '资产追踪', d: '极低功耗的物流追踪器，仅在特定运动模式下唤醒。' },
+                    { t: '安全帽检测', d: '工地入口检测工人是否佩戴安全装备。' }
+                ],
+                sensors: [20, 10, 70] // Audio, Vision, IMU (Vibration)
+            },
+            health: {
+                title: '健康医疗 & 可穿戴',
+                desc: '在智能手表和医疗贴片上运行，实时分析生物信号。由于数据极其敏感，本地处理是医疗合规的关键。',
+                cases: [
+                    { t: '心律失常检测', d: '实时分析 PPG/ECG 信号，检测房颤等异常。' },
+                    { t: '跌倒检测', d: '老年人穿戴设备，通过加速度计数据高精度识别跌倒。' },
+                    { t: '咳嗽/打鼾分析', d: '监测睡眠质量和呼吸道健康。' },
+                    { t: '活动识别', d: '自动区分跑步、游泳、骑行等运动模式。' }
+                ],
+                sensors: [10, 0, 90] // Audio, Vision, IMU/Bio
+            },
+            nature: {
+                title: '智慧农业 & 环境监测',
+                desc: '野外环境往往没有网络且更换电池困难。TinyML 使得部署“用后即忘”的智能传感器成为可能。',
+                cases: [
+                    { t: '害虫检测', d: '低功耗摄像头识别特定害虫，通过 LoRa 仅发送报警信号。' },
+                    { t: '森林火灾预警', d: '通过气体传感器和热成像，在火灾初期进行识别。' },
+                    { t: '野生动物追踪', d: '项圈本地识别动物行为（进食、奔跑），节省卫星通讯费。' },
+                    { t: '蚊虫分类', d: '通过翅膀拍打频率的声音识别蚊子种类（是否携带疟疾）。' }
+                ],
+                sensors: [40, 40, 20] // Audio, Vision, IMU/Env
+            }
+        };
+
+        const ctxSensor = document.getElementById('sensorPieChart').getContext('2d');
+        let sensorChart = new Chart(ctxSensor, {
+            type: 'pie',
+            data: {
+                labels: ['音频 (Audio)', '视觉 (Vision)', '运动/震动 (Motion)'],
+                datasets: [{
+                    data: [60, 30, 10], // Initial data
+                    backgroundColor: ['#f59e0b', '#0f766e', '#6366f1'], // Amber, Teal, Indigo
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+                }
+            }
+        });
+
+        function selectDomain(key) {
+            // Update UI
+            document.querySelectorAll('.domain-btn').forEach(b => {
+                b.classList.remove('ring-2', 'ring-teal-500', 'active-domain');
+                if(b.dataset.domain === key) b.classList.add('ring-2', 'ring-teal-500', 'active-domain');
+            });
+
+            const data = domains[key];
+            
+            // Text Updates (Fade effect)
+            const titleEl = document.getElementById('domain-title');
+            const descEl = document.getElementById('domain-desc');
+            const gridEl = document.getElementById('use-cases-grid');
+
+            titleEl.innerText = data.title;
+            descEl.innerText = data.desc;
+
+            // Rebuild Grid
+            gridEl.innerHTML = data.cases.map(c => `
+                <div class="bg-white p-3 rounded shadow-sm border border-slate-100 card-hover">
+                    <span class="font-bold text-slate-700 block text-teal-700">${c.t}</span>
+                    <span class="text-sm text-slate-500">${c.d}</span>
+                </div>
+            `).join('');
+
+            // Chart Update
+            sensorChart.data.datasets[0].data = data.sensors;
+            sensorChart.update();
+        }
+
+        // --- 4. Market Growth Chart (Line) ---
+        const ctxMarket = document.getElementById('marketChart').getContext('2d');
+        new Chart(ctxMarket, {
+            type: 'line',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024 (E)', '2025 (E)', '2026 (E)'],
+                datasets: [{
+                    label: 'TinyML 设备安装量 (十亿)',
+                    data: [0.5, 0.8, 1.2, 1.8, 2.5, 3.5, 4.8],
+                    borderColor: '#0f766e', // Teal 700
+                    backgroundColor: 'rgba(15, 118, 110, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { mode: 'index', intersect: false }
+                }
+            }
+        });
+
+        // Smooth Scroll Helper
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+    </script>
+</body>
+</html>
